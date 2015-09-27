@@ -5,14 +5,15 @@ if ARGV.empty?
   exit
 end
 
-require_relative "../src/crutest"
+require "../src/crutest"
 require "crclap"
 
 files = Crclap.run ARGV,
-  "-r"      => lambda { |file| require file },
-  "-o"      => lambda { |name| crutest[:only] = name },
-  "-s"      => lambda { |name| crutest[:scope] = name },
-  "-v"      => lambda { puts Crutest::VERSION }
+ # Dynamic require is not possible in a dynamic language?
+ # {"-r"      => lambda { |file| require "#{file}" } },
+  {"-o"      => lambda { |name| crutest[:only] = name } },
+  {"-s"      => lambda { |name| crutest[:scope] = name } },
+  {"-v"      => lambda { puts Crutest::VERSION } }
 
 if files.any?
   success = Crutest.run(Dir[*files])

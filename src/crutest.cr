@@ -1,9 +1,9 @@
 class Crutest
-  unless defined?(VERSION)
+ # unless defined?(VERSION)
     VERSION = "0.1.0"
     FILTER = %r[/(crystal|cr)[-/]([0-9\.])+]
     CACHE = Hash.new { |h, k| h[k] = File.readlines(k) }
-  end
+ # end
 
   def self.run(files)
     status = files.all? do |file|
@@ -22,12 +22,12 @@ class Crutest
       begin
         load(file)
 
-      rescue LoadError, SyntaxError
-        display_error
+      rescue ex : LoadError | SyntaxError
+        display_error(ex)
         exit 1
 
-      rescue StandardError
-        trace = $!.backtrace
+      rescue ex : StandardError
+        trace = ex.backtrace
         pivot = trace.index { |line| line.match(file) }
 
         puts "\n  test: %s" % crutest[:test]
@@ -54,9 +54,9 @@ class Crutest
     end
   end
 
-  def self.display_error
-    print "\n#{$!.class}: "
-    print "#{$!.message}\n"
+  def self.display_error(ex)
+    print "\n#{ex.class}: "
+    print "#{ex.message}\n"
   end
 
   def self.display_trace(line)
@@ -66,7 +66,7 @@ class Crutest
     puts "  file: #{fn} +#{ln}"
   end
 
-  class AssertionFailed < StandardError
+  class AssertionFailed < Exception 
   end
 
   class Scope
@@ -81,20 +81,18 @@ class Crutest
 end
 
 module Kernel
-private
-
   # Use Thread.current[:crutest] to store information about test preparation
   # and setup.
-  Thread.current[:crutest] ||= { :prepare => [] }
+  Fiber.current[:crutest] ||= { :prepare => [] of String }
 
   # Shortcut to access Thread.current[:crutest].
-  def crutest
-    Thread.current[:crutest]
+  private def crutest
+    Fiber.current[:crutest]
   end
 
   # Create an instance where the block will be evaluated. Recommended to improve
   # isolation between tests.
-  def scope(name = nil, &block)
+  private def scope(name = nil, &block)
     if !crutest[:scope] || crutest[:scope] == name
       Crutest::Scope.new(&block).call
     end
@@ -105,7 +103,7 @@ private
   # preparation blocks. When a test is executed, all the preparation blocks
   # are ran in the order they were declared. If called without a block, it
   # returns the array of preparation blocks.
-  def prepare(&block)
+  private def prepare(&block)
     crutest[:prepare] << block if block_given?
     crutest[:prepare]
   end
@@ -125,19 +123,19 @@ private
   # files (the report is per file, not per assertion). Usually one setup
   # block per file is enough, but nothing forbids having different scopes
   # with different setup blocks.
-  def setup(&block)
+  private def setup(&block)
     crutest[:setup] = block if block_given?
     crutest[:setup]
   end
 
   # Kernel includes a test method for performing tests on files.
-  undef test if defined? test
+  private undef test if defined? test
 
   # Call the prepare and setup blocks before executing the test. Even
   # though the assertions can live anywhere (it's not mandatory to put them
   # inside test blocks), it is necessary to wrap them in test blocks in order
   # to execute preparation and setup blocks.
-  def test(name = nil, &block)
+  private def test(name = nil, &block)
     crutest[:test] = name
 
     if !crutest[:only] || crutest[:only] == name
@@ -149,21 +147,21 @@ private
   end
 
   # Assert that value is not nil or false.
-  def assert(value, msg = "expression returned #{value.inspect}")
+  private def assert(value, msg = "expression returned #{value.inspect}")
     flunk(msg) unless value
     success
   end
 
   # Assert that two values are equal.
-  def assert_equal(value, other)
+  private def assert_equal(value, other)
     assert(value == other, "#{value.inspect} != #{other.inspect}")
   end
 
   # Assert that the block doesn't raise the expected exception.
-  def assert_raise(expected = Exception)
+  private def assert_raise(expected = Exception)
     begin
       yield
-    rescue expected => exception
+    rescue exception
       exception
     ensure
       assert(exception.kind_of?(expected), "got #{exception.inspect} instead")
@@ -172,8 +170,8 @@ private
 
   # Stop the tests and raise an error where the message is the last line
   # executed before flunking.
-  def flunk(message = nil)
-    backtrace = caller.find { |line| line.include? 'top (required)' }
+  private def flunk(message = nil)
+    backtrace = caller.find { |line| line.include? "top (required)" }
     exception = Crutest::AssertionFailed.new(message)
     exception.set_backtrace(backtrace)
 
@@ -181,7 +179,7 @@ private
   end
 
   # Executed when an assertion succeeds.
-  def success
+  private def success
     print "."
   end
 end

@@ -3,7 +3,7 @@ test "output of successful run" do
 
   out = %x{./bin/crutest test/fixtures/success.rb}
 
-  assert_equal(expected, out)
+  assert_equal(expected, {out})
 end
 
 test "exit code of successful run" do
@@ -20,7 +20,7 @@ test "output of failed run" do
 
   out = %x{./bin/crutest test/fixtures/failure.rb}
 
-  assert_equal(expected, out)
+  assert_equal(expected, {out})
 end
 
 test "output of failed run" do
@@ -32,7 +32,7 @@ test "output of failed run" do
 
   out = %x{./bin/crutest test/fixtures/exception.rb}
 
-  assert_equal(expected, out)
+  assert_equal(expected, {out})
 end
 
 test "exit code of failed run" do
@@ -50,7 +50,7 @@ test "output of an assertion with custom message" do
 
   out = %x{./bin/crutest test/fixtures/fail_custom_message.rb}
 
-  assert_equal(expected, out)
+  assert_equal(expected, {out})
 end
 
 test "output of custom assertion" do
@@ -62,7 +62,7 @@ test "output of custom assertion" do
 
   out = %x{./bin/crutest test/fixtures/fail_custom_assertion.rb}
 
-  assert_equal(expected, out)
+  assert_equal(expected, {out})
 end
 
 test "output of failure in nested file" do
@@ -74,7 +74,7 @@ test "output of failure in nested file" do
 
   out = %x{./bin/crutest test/fixtures/failure_in_loaded_file.rb}
 
-  assert_equal(expected, out)
+  assert_equal(expected, {out})
 end
 
 test "output of failure outside block" do
@@ -86,13 +86,13 @@ test "output of failure outside block" do
 
   out = %x{./bin/crutest test/fixtures/outside_block.rb}
 
-  assert_equal(expected, out)
+  assert_equal(expected, {out})
 end
 
 test "only runs given scope name" do
   out = %x{./bin/crutest test/fixtures/only_run_given_scope_name.rb -s scope}
 
-  assert out =~ /This is raised/
+  assert {out} =~ /This is raised/
 end
 
 test "runs by given scope and test names" do
@@ -100,4 +100,3 @@ test "runs by given scope and test names" do
 
   assert_equal 0, $?.to_i
 end
-

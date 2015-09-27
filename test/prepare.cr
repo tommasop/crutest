@@ -1,5 +1,5 @@
 prepare do
-  $foo = []
+  $foo = [] of String
 end
 
 prepare do
