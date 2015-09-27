@@ -1,0 +1,6 @@
+version: 1.0
+shards:
+  crclap:
+    github: tommasop/crclap
+    commit: 2530c56f29edad4d9bb2ce4e88dd179990d9434b
+

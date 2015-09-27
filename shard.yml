@@ -1,0 +1,9 @@
+name: crutest
+version: 0.1.0
+license: MIT
+
+dependencies:
+  crclap:
+    github: tommasop/crclap
+    branch: master
+

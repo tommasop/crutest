@@ -1,0 +1,21 @@
+#!/usr/bin/env crystal
+
+if ARGV.empty?
+  puts "usage: crutest [-v] [-r lib] [-o test] [-s scope] file ..."
+  exit
+end
+
+require_relative "../src/crutest"
+require "crclap"
+
+files = Crclap.run ARGV,
+  "-r"      => lambda { |file| require file },
+  "-o"      => lambda { |name| crutest[:only] = name },
+  "-s"      => lambda { |name| crutest[:scope] = name },
+  "-v"      => lambda { puts Crutest::VERSION }
+
+if files.any?
+  success = Crutest.run(Dir[*files])
+
+  exit(1) unless success
+end
